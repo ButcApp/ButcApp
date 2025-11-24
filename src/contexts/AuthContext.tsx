@@ -5,6 +5,14 @@ import { User, Session, AuthError } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
+// Helper function to generate verification token (client-side compatible)
+const generateVerificationToken = (): string => {
+  // Client-side crypto için basit bir yöntem
+  const array = new Uint8Array(32)
+  crypto.getRandomValues(array)
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('')
+}
+
 interface AuthContextType {
   user: User | null
   session: Session | null
@@ -110,17 +118,83 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Loading state'ini başlat
       setLoading(true)
       
+      // Önce kullanıcının var olup olmadığını kontrol et
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('email', email.trim().toLowerCase())
+        .single()
+
+      if (existingUser) {
+        setLoading(false)
+        return { error: { message: 'Bu email adresi zaten kayıtlı.' } as AuthError }
+      }
+      
+      // Supabase Auth ile kullanıcı oluştur (email confirmation disabled)
       const { data, error } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password,
         options: {
           data: {
-            full_name: fullName || null
+            full_name: fullName || null,
+            email_verified: false // Custom verification flag
           }
         }
       })
 
       console.log('Supabase response:', { data, error })
+      
+      if (error) {
+        setLoading(false)
+        return { error }
+      }
+
+      // Kullanıcı başarıyla oluşturulduysa custom email gönder
+      if (data.user && !data.session) {
+        try {
+          // Custom verification token oluştur
+          const verificationToken = generateVerificationToken()
+          
+          // Verification token'ı veritabanına kaydet
+          await supabase
+            .from('email_verifications')
+            .insert({
+              user_id: data.user.id,
+              email: email.trim().toLowerCase(),
+              token: verificationToken,
+              expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 saat
+              created_at: new Date().toISOString()
+            })
+
+          // Custom email gönder
+          const { EmailService } = await import('@/lib/email-template')
+          const emailService = EmailService.getInstance()
+          
+          const verificationUrl = emailService.generateVerificationUrl(
+            email.trim().toLowerCase(), 
+            verificationToken
+          )
+          
+          const emailData = emailService.createVerificationEmail(
+            email.trim().toLowerCase(),
+            verificationToken,
+            fullName || undefined
+          )
+
+          const emailResult = await emailService.sendEmail(emailData)
+          
+          if (!emailResult.success) {
+            console.error('Email gönderilemedi:', emailResult.error)
+            // Email gönderilemese bile kullanıcı oluşturuldu, sadece log bas
+          } else {
+            console.log('Doğrulama emaili başarıyla gönderildi')
+          }
+
+        } catch (emailError) {
+          console.error('Email gönderme hatası:', emailError)
+          // Email hatası kullanıcı oluşturmayı engellemesin
+        }
+      }
       
       // Loading state'ini bitir
       setLoading(false)

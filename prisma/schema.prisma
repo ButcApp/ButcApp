@@ -78,6 +78,18 @@ model UserActivityLog {
   createdAt DateTime @default(now())
 }
 
+// Email doğrulama token'ları için model
+model EmailVerification {
+  id        String   @id @default(cuid())
+  userId    String   // Supabase user ID
+  email     String
+  token     String   @unique // doğrulama token'ı
+  expiresAt DateTime // token geçerlilik süresi
+  usedAt    DateTime? // kullanıldığı zaman
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 // Admin rolleri için enum
 enum Role {
   ADMIN
