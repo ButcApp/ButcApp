@@ -11,8 +11,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { User, LogOut, Settings, Shield } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { User, LogOut, Settings, Shield, Trash2, RefreshCw } from 'lucide-react'
+import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 
@@ -24,6 +24,7 @@ export function UserAuthButton({ onAuthClick }: UserAuthButtonProps) {
   const { t } = useLanguage()
   const { user, signOut } = useAuth()
   const router = useRouter()
+  const pathname = usePathname()
 
   const handleSignOut = async () => {
     await signOut()
@@ -33,6 +34,21 @@ export function UserAuthButton({ onAuthClick }: UserAuthButtonProps) {
   const handleGoToApp = () => {
     router.push('/app')
   }
+
+  const handleGoToSettings = () => {
+    router.push('/app/settings')
+  }
+
+  const handleDeleteAccount = () => {
+    router.push('/app/settings?tab=security&action=delete')
+  }
+
+  const handleResetData = () => {
+    router.push('/app/settings?tab=security&action=reset')
+  }
+
+  // Check if user is currently in the app
+  const isInApp = pathname.startsWith('/app')
 
   if (user) {
     // User is logged in
@@ -59,17 +75,24 @@ export function UserAuthButton({ onAuthClick }: UserAuthButtonProps) {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleGoToApp}>
-            <Shield className="mr-2 h-4 w-4" />
-            <span>Uygulamaya Git</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <User className="mr-2 h-4 w-4" />
-            <span>{t('auth.profile') || 'Profil'}</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
+          {!isInApp && (
+            <DropdownMenuItem onClick={handleGoToApp}>
+              <Shield className="mr-2 h-4 w-4" />
+              <span>Uygulamaya Git</span>
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem onClick={handleGoToSettings}>
             <Settings className="mr-2 h-4 w-4" />
             <span>{t('auth.settings') || 'Ayarlar'}</span>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleResetData} className="text-orange-600">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            <span>Verileri Sıfırla</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleDeleteAccount} className="text-destructive">
+            <Trash2 className="mr-2 h-4 w-4" />
+            <span>Hesabı Sil</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleSignOut}>

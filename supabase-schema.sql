@@ -93,6 +93,16 @@ CREATE INDEX IF NOT EXISTS idx_profiles_email ON public.profiles(email);
 -- 5. File size limit: 1048576 (1MB)
 -- 6. Allowed MIME types: image/png, image/jpeg, image/gif, image/webp
 
+-- Bucket oluşturma SQL komutu:
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'avatars',
+  'avatars',
+  true,
+  2097152, -- 2MB
+  ARRAY['image/png', 'image/jpeg', 'image/gif', 'image/webp']
+) ON CONFLICT (id) DO NOTHING;
+
 -- Storage policies for avatars (bucket oluşturduktan sonra çalıştırın):
 CREATE POLICY "Users can upload own avatar"
   ON storage.objects FOR INSERT
@@ -124,6 +134,25 @@ CREATE POLICY "Users can delete own avatar"
     bucket_id = 'avatars' AND
     auth.role() = 'authenticated' AND
     auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+-- Alternatif olarak daha basit policy (tüm authenticated kullanıcılar kendi avatarlarını yönetebilir):
+DROP POLICY IF EXISTS "Users can upload own avatar" ON storage.objects;
+DROP POLICY IF EXISTS "Users can view own avatar" ON storage.objects;
+DROP POLICY IF EXISTS "Users can update own avatar" ON storage.objects;
+DROP POLICY IF EXISTS "Users can delete own avatar" ON storage.objects;
+
+CREATE POLICY "Users can manage own avatars"
+  ON storage.objects FOR ALL
+  USING (
+    bucket_id = 'avatars' AND
+    auth.role() = 'authenticated' AND
+    (auth.uid()::text = (storage.foldername(name))[1] OR name LIKE auth.uid()::text || '%')
+  )
+  WITH CHECK (
+    bucket_id = 'avatars' AND
+    auth.role() = 'authenticated' AND
+    (auth.uid()::text = (storage.foldername(name))[1] OR name LIKE auth.uid()::text || '%')
   );
 
 -- 8. Sample data structure for user_data

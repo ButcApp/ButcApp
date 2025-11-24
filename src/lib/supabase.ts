@@ -10,19 +10,36 @@ let supabaseAdmin: ReturnType<typeof createClient> | null = null
 if (typeof window !== 'undefined') {
   // Client side - only use anon key
   if (supabaseUrl && supabaseAnonKey) {
-    supabase = createClient(supabaseUrl, supabaseAnonKey)
+    supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          'Accept': 'application/json'
+        }
+      }
+    })
   }
 } else {
   // Server side - can use service role key
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (supabaseUrl && supabaseAnonKey) {
-    supabase = createClient(supabaseUrl, supabaseAnonKey)
+    supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          'Accept': 'application/json'
+        }
+      }
+    })
   }
   if (supabaseUrl && supabaseServiceKey) {
     supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false
+      },
+      global: {
+        headers: {
+          'Accept': 'application/json'
+        }
       }
     })
   }

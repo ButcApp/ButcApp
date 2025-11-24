@@ -13,6 +13,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>
   signOut: () => Promise<void>
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>
+  updateUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -175,6 +176,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }
 
+  const updateUser = async () => {
+    try {
+      if (!supabase) {
+        console.error('Supabase client not initialized')
+        return
+      }
+      
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        setSession(session)
+        setUser(session.user)
+        await createOrUpdateProfile(session.user)
+      }
+    } catch (error) {
+      console.error('Error updating user:', error)
+    }
+  }
+
   const value: AuthContextType = {
     user,
     session,
@@ -182,7 +201,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signUp,
     signIn,
     signOut,
-    resetPassword
+    resetPassword,
+    updateUser
   }
 
   return (

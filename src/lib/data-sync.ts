@@ -27,7 +27,7 @@ export const dataSync = {
         .from('user_data')
         .select('data')
         .eq('user_id', userId)
-        .eq('data_type', 'balances')
+        .eq('data_type', 'accounts')
         .single()
 
       if (error) {
@@ -62,9 +62,11 @@ export const dataSync = {
         .from('user_data')
         .upsert({
           user_id: userId,
-          data_type: 'balances',
+          data_type: 'accounts',
           data: balances,
           updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id,data_type'
         })
 
       if (error) {
@@ -148,6 +150,8 @@ export const dataSync = {
           data_type: 'transactions',
           data: updatedTransactions,
           updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id,data_type'
         })
 
       if (error) {
@@ -233,6 +237,8 @@ export const dataSync = {
           data_type: 'recurring_transactions',
           data: updatedRecurring,
           updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id,data_type'
         })
 
       if (error) {
@@ -272,6 +278,8 @@ export const dataSync = {
           data_type: 'recurring_transactions',
           data: updatedRecurring,
           updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id,data_type'
         })
 
       if (error) {
@@ -351,6 +359,8 @@ export const dataSync = {
           data_type: 'notes',
           data: updatedNotes,
           updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id,data_type'
         })
 
       if (error) {
@@ -388,6 +398,8 @@ export const dataSync = {
           data_type: 'notes',
           data: updatedNotes,
           updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id,data_type'
         })
 
       if (error) {
