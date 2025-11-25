@@ -6,9 +6,14 @@ import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { CheckCircle, Loader2, AlertCircle } from 'lucide-react'
+<<<<<<< HEAD
 import { Suspense } from 'react'
 
 function AuthCallbackContent() {
+=======
+
+export default function AuthCallback() {
+>>>>>>> 9cc805bd34fa18d9c95f0df5bc60e50d3a86d5b2
   const router = useRouter()
   const searchParams = useSearchParams()
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
@@ -259,6 +264,7 @@ function AuthCallbackContent() {
       </Card>
     </div>
   )
+<<<<<<< HEAD
 }
 
 export default function AuthCallback() {
@@ -275,4 +281,6 @@ export default function AuthCallback() {
       <AuthCallbackContent />
     </Suspense>
   )
+=======
+>>>>>>> 9cc805bd34fa18d9c95f0df5bc60e50d3a86d5b2
 }
